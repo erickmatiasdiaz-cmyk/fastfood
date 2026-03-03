@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { X } from "lucide-react";
@@ -13,7 +13,7 @@ interface CheckoutModalProps {
 /**
  * CheckoutModal profesional
  * - Abre WhatsApp
- * - Muestra confirmación
+ * - Muestra confirmaciÃ³n
  * - Limpia carrito
  * - Cierra modal y drawer
  */
@@ -65,7 +65,7 @@ ${comment ? `Comentario: ${comment}` : ""}
 
     setIsSending(true);
 
-    const phone = "56912345678"; // ⚠️ Cambiar número real
+    const phone = "56984795290"; // âš ï¸ Cambiar nÃºmero real
     const url = `https://wa.me/${phone}?text=${generateMessage()}`;
 
     window.open(url, "_blank");
@@ -112,7 +112,7 @@ ${comment ? `Comentario: ${comment}` : ""}
               </label>
               <input
                 type="text"
-                placeholder="Ej: Juan Pérez"
+                placeholder="Ej: Juan PÃ©rez"
                 className="w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -169,3 +169,4 @@ ${comment ? `Comentario: ${comment}` : ""}
     </div>
   );
 }
+
