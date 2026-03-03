@@ -1,26 +1,96 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* === THEME COME COME === */
+@theme {
+  --color-primary: #D71920;
+  --color-secondary: #FFD100;
+  --color-dark: #111111;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* === GLOBAL STYLES === */
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: white;
+  color: var(--color-dark);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+}
+/* ===============================
+   Hero animated text shimmer
+================================ */
+
+@keyframes shimmerText {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.hero-shimmer {
+  background: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    #ffffff 40%,
+    #facc15 50%,
+    #dc2626 60%,
+    #ffffff 70%,
+    #ffffff 100%
+  );
+
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+
+  animation: shimmerText 8s linear infinite;
+}
+/* ============================================= */
+/*  Animación línea premium del header          */
+/* ============================================= */
+
+/*
+  Movimiento horizontal continuo
+  Simula energía / actividad
+*/
+@keyframes headerLine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Clase reutilizable */
+.animate-headerLine {
+  animation: headerLine 3s linear infinite;
+}
+/* ============================================
+   Animación fuego premium
+   Simula vibración y glow natural
+============================================ */
+
+@keyframes flameFlicker {
+  0%   { transform: scale(1) rotate(0deg); }
+  25%  { transform: scale(1.05) rotate(-2deg); }
+  50%  { transform: scale(0.98) rotate(2deg); }
+  75%  { transform: scale(1.03) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes flameGlow {
+  0%   { filter: drop-shadow(0 0 4px #ffae00); }
+  50%  { filter: drop-shadow(0 0 12px #ff3c00); }
+  100% { filter: drop-shadow(0 0 4px #ffae00); }
+}
+
+.flame-animate {
+  animation: flameFlicker 1.2s infinite ease-in-out,
+             flameGlow 1.6s infinite ease-in-out;
 }
