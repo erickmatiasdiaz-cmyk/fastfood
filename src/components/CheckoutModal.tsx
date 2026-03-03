@@ -36,19 +36,19 @@ export default function CheckoutModal({
    */
   const generateMessage = () => {
     const itemsText = cart
-      .map((item) => `- ${item.name} x${item.quantity}`)
+      .map((item) => `🍔 ${item.name} x${item.quantity}`)
       .join("\n");
 
     const message = `
-Hola, quiero retirar el siguiente pedido:
+🍟 Hola, quiero retirar el siguiente pedido:
 
 ${itemsText}
 
-Total: $${total.toLocaleString("es-CL")}
+💰 Total: $${total.toLocaleString("es-CL")}
 
-Nombre: ${name}
-Hora de retiro: ${pickupTime}
-${comment ? `Comentario: ${comment}` : ""}
+👤 Nombre: ${name}
+⏰ Hora de retiro: ${pickupTime}
+${comment ? `📝 Comentario: ${comment}` : ""}
 `;
 
     return encodeURIComponent(message);
