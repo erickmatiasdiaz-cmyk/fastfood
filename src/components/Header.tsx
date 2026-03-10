@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
-// Icono carrito (lucide)
-import { ShoppingCart } from "lucide-react";
+// Iconos (lucide)
+import { ShoppingCart, UtensilsCrossed } from "lucide-react";
 
 // Hook del carrito
 import { useCart } from "@/components/CartProvider";
@@ -18,14 +18,11 @@ export default function Header() {
       - Z-index alto para quedar sobre todo
     */
     <header className="sticky top-0 z-50 bg-red-600 text-white shadow-lg">
-
       {/* CONTENEDOR CENTRAL */}
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        
         {/* ================= LOGO ================= */}
-        <div className="flex items-center gap-3">
-          
-          {/* Círculo marca */}
+        <div className="flex items-center">
+          {/* Circulo marca con icono restaurante */}
           <div
             className="
               w-10 h-10
@@ -33,20 +30,14 @@ export default function Header() {
               bg-white
               text-red-600
               flex items-center justify-center
-              font-bold
               shadow
             "
           >
-            CC
+            <UtensilsCrossed size={20} strokeWidth={2.5} />
           </div>
-
-          {/* Nombre */}
-          <span className="font-bold text-xl tracking-wide">
-            COME COME
-          </span>
         </div>
 
-        {/* ================= BOTÓN CARRITO ================= */}
+        {/* ================= BOTON CARRITO ================= */}
         <button
           onClick={toggleCart} // Abre el drawer
           className="
@@ -90,10 +81,10 @@ export default function Header() {
         </button>
       </div>
 
-      {/* ================= LÍNEA ANIMADA PREMIUM ================= */}
+      {/* ================= LINEA ANIMADA PREMIUM ================= */}
       {/* 
          Barra inferior animada tipo SaaS.
-         Da sensación de producto tecnológico y dinámico.
+         Da sensacion de producto tecnologico y dinamico.
       */}
       <div className="relative h-[3px] w-full overflow-hidden">
         <div
