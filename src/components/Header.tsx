@@ -1,10 +1,19 @@
 "use client";
 
-import { Clock3, MapPin, ShoppingCart, UtensilsCrossed } from "lucide-react";
+import {
+  Clock3,
+  LockKeyhole,
+  MapPin,
+  ShoppingCart,
+  UtensilsCrossed,
+} from "lucide-react";
+import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 
 export default function Header() {
   const { cart, toggleCart, getTotal, getItemCount } = useCart();
+  const { settings } = useSiteSettings();
   const itemCount = getItemCount();
 
   return (
@@ -34,22 +43,41 @@ export default function Header() {
           <a href="#retiro" className="transition hover:text-red-600">
             Retiro
           </a>
+          <Link href="/admin" className="transition hover:text-red-600">
+            Admin
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-emerald-700 shadow-sm lg:flex">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            Abierto ahora
+          <div
+            className={`hidden items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold shadow-sm lg:flex ${
+              settings.isOpen ? "text-emerald-700" : "text-red-700"
+            }`}
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                settings.isOpen ? "bg-emerald-500" : "bg-red-500"
+              }`}
+            />
+            {settings.statusMessage}
           </div>
 
           <div className="hidden items-center gap-2 text-xs font-semibold text-black/60 xl:flex">
             <Clock3 size={15} aria-hidden="true" />
-            15-20 min
+            {settings.prepTime}
           </div>
           <div className="hidden items-center gap-2 text-xs font-semibold text-black/60 xl:flex">
             <MapPin size={15} aria-hidden="true" />
             Retiro en local
           </div>
+
+          <Link
+            href="/admin"
+            aria-label="Entrar al panel admin"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#17130f] shadow-sm transition hover:text-red-600"
+          >
+            <LockKeyhole size={18} aria-hidden="true" />
+          </Link>
 
           <button
             onClick={toggleCart}

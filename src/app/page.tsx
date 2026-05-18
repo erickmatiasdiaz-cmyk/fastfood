@@ -1,7 +1,9 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import TrustSection from "@/components/TrustSection";
+import BusinessHoursSection from "@/components/BusinessHoursSection";
 import FeaturedSection from "@/components/FeaturedSection";
+import PromoSection from "@/components/PromoSection";
 import MenuSection from "@/components/MenuSection";
 import CartDrawer from "@/components/CartDrawer";
 import Toast from "@/components/Toast";
@@ -16,7 +18,9 @@ export default function Home() {
         <Header />
         <Hero />
         <TrustSection />
+        <BusinessHoursSection />
         <FeaturedSection />
+        <PromoSection />
         <MenuSection />
         <CartDrawer />
         <Toast />

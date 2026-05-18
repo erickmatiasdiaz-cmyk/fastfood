@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useState } from "react";
 import CheckoutModal from "./CheckoutModal";
 import { useCart } from "./CartProvider";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 export default function CartDrawer() {
   const {
@@ -17,6 +18,7 @@ export default function CartDrawer() {
     removeFromCart,
     getTotal,
   } = useCart();
+  const { settings } = useSiteSettings();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const total = getTotal();
 
@@ -55,7 +57,7 @@ export default function CartDrawer() {
                 </h2>
                 <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-black/55">
                   <Clock3 size={14} aria-hidden="true" />
-                  Retiro estimado 15-20 min
+                  Retiro estimado {settings.prepTime}
                 </p>
               </div>
 
@@ -110,7 +112,7 @@ export default function CartDrawer() {
                       >
                         <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
                           <Image
-                            src={item.image}
+                            src={settings.productImages[item.id] || item.image}
                             alt={item.name}
                             fill
                             sizes="80px"

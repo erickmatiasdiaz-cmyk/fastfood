@@ -5,11 +5,13 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { products } from "@/data/products";
 import { useCart } from "./CartProvider";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 const categories = ["Completos", "Churrascos", "Combos", "Empanadas"];
 
 export default function MenuSection() {
   const { addToCart } = useCart();
+  const { settings } = useSiteSettings();
   const [activeCategory, setActiveCategory] = useState(categories[0]);
 
   const filteredProducts = useMemo(
@@ -68,7 +70,7 @@ export default function MenuSection() {
             >
               <div className="relative min-h-56 md:min-h-full">
                 <Image
-                  src={product.image}
+                  src={settings.productImages[product.id] || product.image}
                   alt={product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 180px"

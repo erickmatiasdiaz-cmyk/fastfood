@@ -26,6 +26,27 @@ npm run build
 npm run start
 ```
 
+## Admin
+
+El panel operativo esta disponible en:
+
+```text
+/admin
+```
+
+Permite cambiar estado abierto/cerrado, mensaje visible, tiempo estimado,
+horarios, imagen principal, imagenes de productos y promocion destacada. Los
+cambios se guardan automaticamente en `localStorage` del navegador.
+
+El acceso local pide un PIN. Configuralo con:
+
+```bash
+NEXT_PUBLIC_ADMIN_PIN=1234
+```
+
+Si no se define, el PIN demo es `1234`. Este login es local y sirve para demo o
+uso en un equipo controlado; no reemplaza autenticacion real en produccion.
+
 ## Estructura
 
 - `src/app`: layout, pagina principal y estilos globales.

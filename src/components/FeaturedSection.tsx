@@ -4,9 +4,11 @@ import { Clock3, Plus } from "lucide-react";
 import Image from "next/image";
 import { products } from "@/data/products";
 import { useCart } from "./CartProvider";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 export default function FeaturedSection() {
   const { addToCart } = useCart();
+  const { settings } = useSiteSettings();
   const featuredProducts = products.filter((product) => product.featured);
 
   return (
@@ -36,7 +38,7 @@ export default function FeaturedSection() {
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden">
                 <Image
-                  src={product.image}
+                  src={settings.productImages[product.id] || product.image}
                   alt={product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"

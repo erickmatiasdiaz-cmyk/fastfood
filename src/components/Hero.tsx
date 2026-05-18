@@ -2,8 +2,11 @@
 
 import { ArrowDown, Clock3, MessageCircle, Star } from "lucide-react";
 import Image from "next/image";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 
 export default function Hero() {
+  const { settings } = useSiteSettings();
+
   const handleScroll = () => {
     document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -11,7 +14,7 @@ export default function Hero() {
   return (
     <section className="relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#17130f]">
       <Image
-        src="/hero.png"
+        src={settings.heroImage}
         alt="Completos, churrascos y empanadas de Come Come"
         fill
         priority
@@ -25,8 +28,12 @@ export default function Hero() {
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-72px)] max-w-7xl items-center px-5 py-16 md:px-8">
         <div className="max-w-3xl text-white">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Pedidos online para retirar hoy
+            <span
+              className={`h-2 w-2 rounded-full ${
+                settings.isOpen ? "bg-emerald-400" : "bg-red-400"
+              }`}
+            />
+            {settings.statusMessage}
           </div>
 
           <h1 className="max-w-4xl text-5xl font-black leading-[0.95] tracking-normal md:text-7xl">
@@ -57,7 +64,7 @@ export default function Hero() {
 
           <div className="mt-10 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
             {[
-              { icon: Clock3, label: "15-20 min", detail: "retiro estimado" },
+              { icon: Clock3, label: settings.prepTime, detail: "retiro estimado" },
               { icon: MessageCircle, label: "WhatsApp", detail: "confirmacion directa" },
               { icon: Star, label: "4 favoritos", detail: "menu breve y claro" },
             ].map(({ icon: Icon, label, detail }) => (
