@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import TrustSection from "@/components/TrustSection";
 import FeaturedSection from "@/components/FeaturedSection";
 import MenuSection from "@/components/MenuSection";
 import CartDrawer from "@/components/CartDrawer";
@@ -14,6 +15,7 @@ export default function Home() {
       <main className="min-h-screen flex flex-col">
         <Header />
         <Hero />
+        <TrustSection />
         <FeaturedSection />
         <MenuSection />
         <CartDrawer />

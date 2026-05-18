@@ -1,100 +1,77 @@
-﻿"use client";
+"use client";
 
-// Iconos (lucide)
-import { ShoppingCart, UtensilsCrossed } from "lucide-react";
-
-// Hook del carrito
+import { Clock3, MapPin, ShoppingCart, UtensilsCrossed } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 
 export default function Header() {
-  // Extraemos datos y funciones del contexto
-  const { cart, toggleCart, getTotal } = useCart();
+  const { cart, toggleCart, getTotal, getItemCount } = useCart();
+  const itemCount = getItemCount();
 
   return (
-    /*
-      HEADER PRINCIPAL
-      - Sticky: siempre visible
-      - Fondo rojo corporativo
-      - Z-index alto para quedar sobre todo
-    */
-    <header className="sticky top-0 z-50 bg-red-600 text-white shadow-lg">
-      {/* CONTENEDOR CENTRAL */}
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        {/* ================= LOGO ================= */}
-        <div className="flex items-center">
-          {/* Circulo marca con icono restaurante */}
-          <div
-            className="
-              w-10 h-10
-              rounded-full
-              bg-white
-              text-red-600
-              flex items-center justify-center
-              shadow
-            "
-          >
-            <UtensilsCrossed size={20} strokeWidth={2.5} />
+    <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f7efe3]/95 text-[#17130f] shadow-sm backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 md:px-8">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white shadow-lg shadow-red-900/20">
+            <UtensilsCrossed size={21} strokeWidth={2.5} aria-hidden="true" />
+          </div>
+          <div>
+            <p className="text-lg font-black uppercase leading-none tracking-wide">
+              Come Come
+            </p>
+            <p className="hidden text-xs font-medium text-black/55 sm:block">
+              Fuente de soda para retirar
+            </p>
           </div>
         </div>
 
-        {/* ================= BOTON CARRITO ================= */}
-        <button
-          onClick={toggleCart} // Abre el drawer
-          className="
-            relative
-            flex items-center gap-3
-            bg-white hover:bg-gray-100
-            text-red-600 font-semibold
-            px-5 py-2 rounded-full
-            transition-all duration-300
-            shadow-md hover:shadow-lg
-          "
-        >
-          {/* Icono */}
-          <ShoppingCart size={20} />
+        <nav aria-label="Secciones" className="hidden items-center gap-6 text-sm font-semibold md:flex">
+          <a href="#favoritos" className="transition hover:text-red-600">
+            Favoritos
+          </a>
+          <a href="#menu" className="transition hover:text-red-600">
+            Menu
+          </a>
+          <a href="#retiro" className="transition hover:text-red-600">
+            Retiro
+          </a>
+        </nav>
 
-          {/* Texto */}
-          <span>Carrito</span>
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-emerald-700 shadow-sm lg:flex">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            Abierto ahora
+          </div>
 
-          {/* Badge cantidad productos */}
-          {cart.length > 0 && (
-            <span
-              className="
-                absolute -top-2 -right-2
-                bg-yellow-400 text-black
-                text-xs font-bold
-                w-6 h-6 flex items-center justify-center
-                rounded-full
-                shadow
-              "
-            >
-              {cart.length}
-            </span>
-          )}
+          <div className="hidden items-center gap-2 text-xs font-semibold text-black/60 xl:flex">
+            <Clock3 size={15} aria-hidden="true" />
+            15-20 min
+          </div>
+          <div className="hidden items-center gap-2 text-xs font-semibold text-black/60 xl:flex">
+            <MapPin size={15} aria-hidden="true" />
+            Retiro en local
+          </div>
 
-          {/* Total visible en desktop */}
-          {cart.length > 0 && (
-            <span className="hidden sm:inline text-sm font-bold">
-              ${getTotal().toLocaleString("es-CL")}
-            </span>
-          )}
-        </button>
-      </div>
+          <button
+            onClick={toggleCart}
+            aria-label={`Abrir carrito con ${itemCount} productos`}
+            className="relative flex items-center gap-2 rounded-full bg-[#17130f] px-4 py-2.5 font-bold text-white shadow-lg shadow-black/15 transition hover:-translate-y-0.5 hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+          >
+            <ShoppingCart size={19} aria-hidden="true" />
+            <span className="hidden sm:inline">Pedido</span>
 
-      {/* ================= LINEA ANIMADA PREMIUM ================= */}
-      {/* 
-         Barra inferior animada tipo SaaS.
-         Da sensacion de producto tecnologico y dinamico.
-      */}
-      <div className="relative h-[3px] w-full overflow-hidden">
-        <div
-          className="
-            absolute inset-0
-            bg-gradient-to-r
-            from-yellow-400 via-orange-500 to-red-500
-            animate-headerLine
-          "
-        />
+            {itemCount > 0 && (
+              <span className="absolute -right-2 -top-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-yellow-300 px-1 text-xs font-black text-black shadow">
+                {itemCount}
+              </span>
+            )}
+
+            {cart.length > 0 && (
+              <span className="hidden border-l border-white/20 pl-2 text-sm font-black sm:inline">
+                ${getTotal().toLocaleString("es-CL")}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
     </header>
   );
