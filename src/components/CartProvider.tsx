@@ -31,7 +31,7 @@ type CartContextType = {
   clearCart: () => void;
 };
 
-const CART_STORAGE_KEY = "comecome-cart";
+const CART_STORAGE_KEY = "punto-mordida-cart";
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 function getInitialCart(): CartItem[] {

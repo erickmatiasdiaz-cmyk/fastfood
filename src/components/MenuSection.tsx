@@ -3,20 +3,23 @@
 import { Clock3, Plus } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { products } from "@/data/products";
+import { getCategories, getManagedProducts } from "@/lib/catalog";
 import { useCart } from "./CartProvider";
 import { useSiteSettings } from "./SiteSettingsProvider";
-
-const categories = ["Completos", "Churrascos", "Combos", "Empanadas"];
 
 export default function MenuSection() {
   const { addToCart } = useCart();
   const { settings } = useSiteSettings();
-  const [activeCategory, setActiveCategory] = useState(categories[0]);
+  const catalog = useMemo(() => getManagedProducts(settings), [settings]);
+  const categories = useMemo(() => getCategories(catalog), [catalog]);
+  const [activeCategory, setActiveCategory] = useState("Completos");
+  const selectedCategory = categories.includes(activeCategory)
+    ? activeCategory
+    : categories[0];
 
   const filteredProducts = useMemo(
-    () => products.filter((product) => product.category === activeCategory),
-    [activeCategory]
+    () => catalog.filter((product) => product.category === selectedCategory),
+    [catalog, selectedCategory]
   );
 
   return (
@@ -40,7 +43,7 @@ export default function MenuSection() {
 
         <div className="mb-10 flex gap-2 overflow-x-auto pb-2">
           {categories.map((category) => {
-            const count = products.filter(
+            const count = catalog.filter(
               (product) => product.category === category
             ).length;
 
@@ -48,9 +51,9 @@ export default function MenuSection() {
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                aria-pressed={activeCategory === category}
+                aria-pressed={selectedCategory === category}
                 className={`shrink-0 rounded-full border px-5 py-3 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${
-                  activeCategory === category
+                  selectedCategory === category
                     ? "border-red-600 bg-red-600 text-white shadow-lg shadow-red-900/15"
                     : "border-black/10 bg-white text-[#17130f] hover:border-red-600 hover:text-red-600"
                 }`}
@@ -70,7 +73,7 @@ export default function MenuSection() {
             >
               <div className="relative min-h-56 md:min-h-full">
                 <Image
-                  src={settings.productImages[product.id] || product.image}
+                  src={product.image}
                   alt={product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 180px"

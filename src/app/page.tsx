@@ -5,6 +5,7 @@ import BusinessHoursSection from "@/components/BusinessHoursSection";
 import FeaturedSection from "@/components/FeaturedSection";
 import PromoSection from "@/components/PromoSection";
 import MenuSection from "@/components/MenuSection";
+import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import Toast from "@/components/Toast";
 import { CartProvider } from "@/components/CartProvider";
@@ -22,6 +23,7 @@ export default function Home() {
         <FeaturedSection />
         <PromoSection />
         <MenuSection />
+        <Footer />
         <CartDrawer />
         <Toast />
       </main>

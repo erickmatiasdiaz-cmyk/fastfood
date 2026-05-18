@@ -4,7 +4,7 @@ import { SiteSettingsProvider } from "@/components/SiteSettingsProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Come Come | Pedido online",
+  title: "Punto Mordida | Pedido online",
   description:
     "Pide completos, churrascos, empanadas y combos para retirar en local.",
 };

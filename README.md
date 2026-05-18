@@ -1,4 +1,4 @@
-# Come Come Demo
+# Punto Mordida Demo
 
 Aplicacion Next.js para pedidos de comida con carrito, checkout por WhatsApp y retiro en local.
 
@@ -37,6 +37,10 @@ El panel operativo esta disponible en:
 Permite cambiar estado abierto/cerrado, mensaje visible, tiempo estimado,
 horarios, imagen principal, imagenes de productos y promocion destacada. Los
 cambios se guardan automaticamente en `localStorage` del navegador.
+
+Tambien permite agregar productos nuevos, editar productos existentes, destacar
+productos, quitar/restaurar productos del menu y manejar varias promociones
+activas al mismo tiempo.
 
 El acceso local pide un PIN. Configuralo con:
 

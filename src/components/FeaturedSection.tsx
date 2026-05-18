@@ -2,14 +2,16 @@
 
 import { Clock3, Plus } from "lucide-react";
 import Image from "next/image";
-import { products } from "@/data/products";
+import { getManagedProducts } from "@/lib/catalog";
 import { useCart } from "./CartProvider";
 import { useSiteSettings } from "./SiteSettingsProvider";
 
 export default function FeaturedSection() {
   const { addToCart } = useCart();
   const { settings } = useSiteSettings();
-  const featuredProducts = products.filter((product) => product.featured);
+  const featuredProducts = getManagedProducts(settings).filter(
+    (product) => product.featured
+  );
 
   return (
     <section id="favoritos" className="bg-white px-5 py-24 md:px-8">
@@ -38,7 +40,7 @@ export default function FeaturedSection() {
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden">
                 <Image
-                  src={settings.productImages[product.id] || product.image}
+                  src={product.image}
                   alt={product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"

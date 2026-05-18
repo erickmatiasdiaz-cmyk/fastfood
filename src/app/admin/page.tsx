@@ -12,12 +12,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useState, useSyncExternalStore } from "react";
+import { FormEvent, useMemo, useState, useSyncExternalStore } from "react";
+import type { Product } from "@/data/products";
 import { products } from "@/data/products";
+import { getManagedProducts } from "@/lib/catalog";
 import type { SiteSettings } from "@/lib/siteSettings";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
 
-const ADMIN_AUTH_STORAGE_KEY = "comecome-admin-authenticated";
+const ADMIN_AUTH_STORAGE_KEY = "punto-mordida-admin-authenticated";
 const ADMIN_PIN = process.env.NEXT_PUBLIC_ADMIN_PIN ?? "1234";
 
 function getAdminAuthSnapshot() {
@@ -39,6 +41,25 @@ function subscribeToAdminAuth(onStoreChange: () => void) {
 
 export default function AdminPage() {
   const { settings, updateSettings, resetSettings } = useSiteSettings();
+  const catalog = useMemo(() => getManagedProducts(settings), [settings]);
+  const [newProduct, setNewProduct] = useState<Omit<Product, "id">>({
+    name: "",
+    description: "",
+    price: 0,
+    category: "Completos",
+    image: "/products/completo_italiano.png",
+    featured: false,
+    badge: "",
+    prepTime: "10-12 min",
+  });
+  const [newPromo, setNewPromo] = useState({
+    title: "",
+    description: "",
+    badge: "Nueva promo",
+    cta: "Ver menu",
+    image: "/products/combo_clasico.png",
+    enabled: true,
+  });
   const storedAuthentication = useSyncExternalStore(
     subscribeToAdminAuth,
     getAdminAuthSnapshot,
@@ -92,6 +113,14 @@ export default function AdminPage() {
         ...settings.productImages,
         ...nextSettings.productImages,
       },
+      productOverrides: {
+        ...settings.productOverrides,
+        ...nextSettings.productOverrides,
+      },
+      customProducts: nextSettings.customProducts ?? settings.customProducts,
+      hiddenProductIds:
+        nextSettings.hiddenProductIds ?? settings.hiddenProductIds,
+      promos: nextSettings.promos ?? settings.promos,
     });
   };
 
@@ -104,6 +133,119 @@ export default function AdminPage() {
       schedule: settings.schedule.map((day, dayIndex) =>
         dayIndex === index ? { ...day, [field]: value } : day
       ),
+    });
+  };
+
+  const updateProductField = (
+    product: Product,
+    field: keyof Omit<Product, "id">,
+    value: string | number | boolean
+  ) => {
+    const isCustomProduct = settings.customProducts.some(
+      (item) => item.id === product.id
+    );
+
+    if (isCustomProduct) {
+      update({
+        customProducts: settings.customProducts.map((item) =>
+          item.id === product.id ? { ...item, [field]: value } : item
+        ),
+      });
+      return;
+    }
+
+    update({
+      productOverrides: {
+        ...settings.productOverrides,
+        [product.id]: {
+          ...settings.productOverrides[product.id],
+          [field]: value,
+        },
+      },
+    });
+  };
+
+  const addProduct = () => {
+    if (!newProduct.name.trim()) {
+      return;
+    }
+
+    update({
+      customProducts: [
+        ...settings.customProducts,
+        {
+          ...newProduct,
+          id: Date.now(),
+          name: newProduct.name.trim(),
+          description: newProduct.description.trim(),
+          price: Number(newProduct.price) || 0,
+        },
+      ],
+    });
+
+    setNewProduct({
+      name: "",
+      description: "",
+      price: 0,
+      category: "Completos",
+      image: "/products/completo_italiano.png",
+      featured: false,
+      badge: "",
+      prepTime: "10-12 min",
+    });
+  };
+
+  const removeProduct = (product: Product) => {
+    const isCustomProduct = settings.customProducts.some(
+      (item) => item.id === product.id
+    );
+
+    if (isCustomProduct) {
+      update({
+        customProducts: settings.customProducts.filter(
+          (item) => item.id !== product.id
+        ),
+      });
+      return;
+    }
+
+    update({
+      hiddenProductIds: [...settings.hiddenProductIds, product.id],
+    });
+  };
+
+  const restoreProduct = (productId: number) => {
+    update({
+      hiddenProductIds: settings.hiddenProductIds.filter(
+        (hiddenId) => hiddenId !== productId
+      ),
+    });
+  };
+
+  const addPromo = () => {
+    if (!newPromo.title.trim()) {
+      return;
+    }
+
+    update({
+      promos: [
+        ...settings.promos,
+        {
+          ...newPromo,
+          id: `promo-${Date.now()}`,
+          title: newPromo.title.trim(),
+          description: newPromo.description.trim(),
+        },
+      ],
+    });
+
+    setNewPromo({
+      title: "",
+      description: "",
+      badge: "Nueva promo",
+      cta: "Ver menu",
+      image: "/products/combo_clasico.png",
+      enabled: true,
     });
   };
 
@@ -174,7 +316,7 @@ export default function AdminPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 md:px-8">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.18em] text-red-600">
-              Admin Come Come
+              Admin Punto Mordida
             </p>
             <h1 className="mt-1 text-3xl font-black">Panel operativo</h1>
           </div>
@@ -347,47 +489,114 @@ export default function AdminPage() {
                 <BadgePercent size={21} aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-xl font-black">Promocion destacada</h2>
+                <h2 className="text-xl font-black">Promociones</h2>
                 <p className="text-sm font-medium text-black/55">
-                  Visible entre favoritos y menu.
+                  Crea varias promos y activa solo las que quieras mostrar.
                 </p>
               </div>
             </div>
 
-            <label className="mb-4 flex items-center gap-3 rounded-lg bg-[#f7efe3] p-4 font-black">
+            <div className="mb-6 grid gap-3 rounded-lg bg-[#f7efe3] p-4 md:grid-cols-2">
               <input
-                type="checkbox"
-                checked={settings.promo.enabled}
+                value={newPromo.title}
                 onChange={(event) =>
-                  update({ promo: { ...settings.promo, enabled: event.target.checked } })
+                  setNewPromo({ ...newPromo, title: event.target.value })
                 }
+                placeholder="Titulo promo"
+                className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
               />
-              Mostrar promo en la tienda
-            </label>
+              <input
+                value={newPromo.badge}
+                onChange={(event) =>
+                  setNewPromo({ ...newPromo, badge: event.target.value })
+                }
+                placeholder="Etiqueta"
+                className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
+              />
+              <input
+                value={newPromo.description}
+                onChange={(event) =>
+                  setNewPromo({ ...newPromo, description: event.target.value })
+                }
+                placeholder="Descripcion"
+                className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600 md:col-span-2"
+              />
+              <input
+                value={newPromo.image}
+                onChange={(event) =>
+                  setNewPromo({ ...newPromo, image: event.target.value })
+                }
+                placeholder="Imagen"
+                className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
+              />
+              <button
+                onClick={addPromo}
+                className="rounded-full bg-red-600 px-5 py-3 font-black text-white transition hover:bg-red-700"
+              >
+                Agregar promo
+              </button>
+            </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              {[
-                ["badge", "Etiqueta"],
-                ["title", "Titulo"],
-                ["description", "Descripcion"],
-                ["cta", "Texto del boton"],
-                ["image", "Imagen promo"],
-              ].map(([field, label]) => (
-                <label key={field} className="block text-sm font-bold">
-                  {label}
-                  <input
-                    value={settings.promo[field as keyof typeof settings.promo] as string}
-                    onChange={(event) =>
+            <div className="grid gap-4">
+              {settings.promos.map((promo) => (
+                <article key={promo.id} className="rounded-lg bg-[#f7efe3] p-4">
+                  <label className="mb-3 flex items-center gap-3 font-black">
+                    <input
+                      type="checkbox"
+                      checked={promo.enabled}
+                      onChange={(event) =>
+                        update({
+                          promos: settings.promos.map((item) =>
+                            item.id === promo.id
+                              ? { ...item, enabled: event.target.checked }
+                              : item
+                          ),
+                        })
+                      }
+                    />
+                    Mostrar en tienda
+                  </label>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {[
+                      ["badge", "Etiqueta"],
+                      ["title", "Titulo"],
+                      ["description", "Descripcion"],
+                      ["cta", "Texto boton"],
+                      ["image", "Imagen"],
+                    ].map(([field, label]) => (
+                      <label key={field} className="text-sm font-bold">
+                        {label}
+                        <input
+                          value={promo[field as keyof typeof promo] as string}
+                          onChange={(event) =>
+                            update({
+                              promos: settings.promos.map((item) =>
+                                item.id === promo.id
+                                  ? { ...item, [field]: event.target.value }
+                                  : item
+                              ),
+                            })
+                          }
+                          className="mt-2 w-full rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
+                        />
+                      </label>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() =>
                       update({
-                        promo: {
-                          ...settings.promo,
-                          [field]: event.target.value,
-                        },
+                        promos: settings.promos.filter(
+                          (item) => item.id !== promo.id
+                        ),
                       })
                     }
-                    className="mt-2 w-full rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
-                  />
-                </label>
+                    className="mt-4 text-sm font-black text-red-600 hover:underline"
+                  >
+                    Eliminar promo
+                  </button>
+                </article>
               ))}
             </div>
           </section>
@@ -398,15 +607,84 @@ export default function AdminPage() {
                 <ImageIcon size={21} aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-xl font-black">Imagenes de productos</h2>
+                <h2 className="text-xl font-black">Productos</h2>
                 <p className="text-sm font-medium text-black/55">
-                  Reemplaza fotos sin tocar codigo.
+                  Agrega, edita, destaca u oculta productos del menu.
                 </p>
               </div>
             </div>
 
+            <div className="mb-6 grid gap-3 rounded-lg bg-[#f7efe3] p-4 md:grid-cols-2">
+              <input
+                value={newProduct.name}
+                onChange={(event) =>
+                  setNewProduct({ ...newProduct, name: event.target.value })
+                }
+                placeholder="Nombre"
+                className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
+              />
+              <input
+                type="number"
+                value={newProduct.price}
+                onChange={(event) =>
+                  setNewProduct({
+                    ...newProduct,
+                    price: Number(event.target.value),
+                  })
+                }
+                placeholder="Precio"
+                className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
+              />
+              <input
+                value={newProduct.category}
+                onChange={(event) =>
+                  setNewProduct({ ...newProduct, category: event.target.value })
+                }
+                placeholder="Categoria"
+                className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
+              />
+              <input
+                value={newProduct.image}
+                onChange={(event) =>
+                  setNewProduct({ ...newProduct, image: event.target.value })
+                }
+                placeholder="Imagen"
+                className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
+              />
+              <input
+                value={newProduct.description}
+                onChange={(event) =>
+                  setNewProduct({
+                    ...newProduct,
+                    description: event.target.value,
+                  })
+                }
+                placeholder="Descripcion"
+                className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600 md:col-span-2"
+              />
+              <label className="flex items-center gap-2 rounded-lg bg-white px-4 py-3 font-black">
+                <input
+                  type="checkbox"
+                  checked={Boolean(newProduct.featured)}
+                  onChange={(event) =>
+                    setNewProduct({
+                      ...newProduct,
+                      featured: event.target.checked,
+                    })
+                  }
+                />
+                Destacado
+              </label>
+              <button
+                onClick={addProduct}
+                className="rounded-full bg-red-600 px-5 py-3 font-black text-white transition hover:bg-red-700"
+              >
+                Agregar producto
+              </button>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
-              {products.map((product) => (
+              {catalog.map((product) => (
                 <article key={product.id} className="rounded-lg bg-[#f7efe3] p-4">
                   <div className="mb-3 flex items-center gap-3">
                     <div className="relative h-16 w-16 overflow-hidden rounded-lg bg-white">
@@ -427,20 +705,75 @@ export default function AdminPage() {
                   </div>
 
                   <input
-                    value={settings.productImages[product.id] || ""}
-                    placeholder={product.image}
+                    value={product.name}
                     onChange={(event) =>
-                      update({
-                        productImages: {
-                          ...settings.productImages,
-                          [product.id]: event.target.value,
-                        },
-                      })
+                      updateProductField(product, "name", event.target.value)
                     }
-                    className="w-full rounded-lg border border-black/15 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-red-600"
+                    className="mb-2 w-full rounded-lg border border-black/15 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-red-600"
                   />
+                  <input
+                    type="number"
+                    value={product.price}
+                    onChange={(event) =>
+                      updateProductField(
+                        product,
+                        "price",
+                        Number(event.target.value)
+                      )
+                    }
+                    className="mb-2 w-full rounded-lg border border-black/15 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-red-600"
+                  />
+                  <input
+                    value={product.image}
+                    onChange={(event) =>
+                      updateProductField(product, "image", event.target.value)
+                    }
+                    className="mb-2 w-full rounded-lg border border-black/15 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-red-600"
+                  />
+                  <textarea
+                    value={product.description}
+                    onChange={(event) =>
+                      updateProductField(
+                        product,
+                        "description",
+                        event.target.value
+                      )
+                    }
+                    className="mb-2 w-full rounded-lg border border-black/15 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-red-600"
+                  />
+                  <label className="mb-3 flex items-center gap-2 text-sm font-black">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(product.featured)}
+                      onChange={(event) =>
+                        updateProductField(
+                          product,
+                          "featured",
+                          event.target.checked
+                        )
+                      }
+                    />
+                    Destacado
+                  </label>
+                  <button
+                    onClick={() => removeProduct(product)}
+                    className="text-sm font-black text-red-600 hover:underline"
+                  >
+                    Quitar del menu
+                  </button>
                 </article>
               ))}
+              {products
+                .filter((product) => settings.hiddenProductIds.includes(product.id))
+                .map((product) => (
+                  <button
+                    key={product.id}
+                    onClick={() => restoreProduct(product.id)}
+                    className="rounded-lg border border-dashed border-red-300 bg-red-50 p-4 text-left font-black text-red-700"
+                  >
+                    Restaurar {product.name}
+                  </button>
+                ))}
             </div>
           </section>
 

@@ -15,7 +15,7 @@ export default function Hero() {
     <section className="relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#17130f]">
       <Image
         src={settings.heroImage}
-        alt="Completos, churrascos y empanadas de Come Come"
+        alt="Completos, churrascos y empanadas de Punto Mordida"
         fill
         priority
         sizes="100vw"

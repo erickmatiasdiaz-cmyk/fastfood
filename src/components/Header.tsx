@@ -25,7 +25,7 @@ export default function Header() {
           </div>
           <div>
             <p className="text-lg font-black uppercase leading-none tracking-wide">
-              Come Come
+              Punto Mordida
             </p>
             <p className="hidden text-xs font-medium text-black/55 sm:block">
               Fuente de soda para retirar
