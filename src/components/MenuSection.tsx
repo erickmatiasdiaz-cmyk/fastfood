@@ -37,11 +37,23 @@ export default function MenuSection() {
 
           <div className="rounded-lg bg-[#17130f] px-5 py-4 text-white shadow-xl shadow-black/10">
             <p className="text-sm font-bold text-white/65">Pedido promedio</p>
-            <p className="text-2xl font-black">15 min retiro</p>
+            <p className="text-2xl font-black">{settings.prepTime} retiro</p>
           </div>
         </div>
 
-        <div className="mb-10 flex gap-2 overflow-x-auto pb-2">
+        {catalog.length === 0 ? (
+          <div className="rounded-lg border border-black/8 bg-white p-10 text-center shadow-sm">
+            <h3 className="text-2xl font-black text-[#17130f]">
+              Menu no disponible por ahora
+            </h3>
+            <p className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-black/55">
+              Estamos actualizando el menu. Vuelve a intentarlo en unos minutos o
+              escribenos por WhatsApp.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-10 flex gap-2 overflow-x-auto pb-2">
           {categories.map((category) => {
             const count = catalog.filter(
               (product) => product.category === category
@@ -119,7 +131,9 @@ export default function MenuSection() {
               </div>
             </article>
           ))}
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

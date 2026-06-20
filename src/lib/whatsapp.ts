@@ -12,7 +12,7 @@ type GenerateWhatsAppLinkParams = {
   comment?: string;
 };
 
-const WHATSAPP_PHONE =
+export const WHATSAPP_PHONE =
   process.env.NEXT_PUBLIC_WHATSAPP_PHONE ?? "56984795290";
 
 export function generateWhatsAppLink({
