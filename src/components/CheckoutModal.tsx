@@ -65,6 +65,10 @@ export default function CheckoutModal({
       comment: customerComment,
     });
 
+    // Open WhatsApp synchronously, inside the click gesture: an await before
+    // window.open consumes the user activation and pop-up blockers may cancel it.
+    window.open(url, "_blank", "noopener,noreferrer");
+
     // Persist the order in Supabase. Never block the customer if it fails.
     try {
       const supabase = createClient();
@@ -83,8 +87,6 @@ export default function CheckoutModal({
     } catch {
       // Order still goes through via WhatsApp even if persistence fails.
     }
-
-    window.open(url, "_blank", "noopener,noreferrer");
 
     setTimeout(() => {
       clearCart();
