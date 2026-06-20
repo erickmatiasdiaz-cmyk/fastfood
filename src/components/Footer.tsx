@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
+import { WHATSAPP_PHONE } from "@/lib/whatsapp";
 
 const socialLinks = [
   {
@@ -30,7 +31,7 @@ const socialLinks = [
   },
   {
     label: "WhatsApp",
-    href: "https://wa.me/56984795290",
+    href: `https://wa.me/${WHATSAPP_PHONE}`,
     icon: MessageCircle,
   },
 ];

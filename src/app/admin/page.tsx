@@ -2,8 +2,11 @@
 
 import {
   BadgePercent,
+  Check,
+  CircleAlert,
   Clock3,
   ImageIcon,
+  Loader2,
   LockKeyhole,
   LogOut,
   Power,
@@ -11,8 +14,16 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { Product } from "@/data/products";
+import ImageUpload from "@/components/admin/ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 import {
   mapProduct,
@@ -107,6 +118,32 @@ export default function AdminPage() {
   const [promos, setPromos] = useState<Promo[]>([]);
   const [newProduct, setNewProduct] = useState<Omit<Product, "id">>(EMPTY_PRODUCT);
   const [newPromo, setNewPromo] = useState(EMPTY_PROMO);
+
+  const [saveState, setSaveState] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const markSaved = useCallback(() => {
+    setSaveState("saved");
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = setTimeout(() => setSaveState("idle"), 1500);
+  }, []);
+
+  // Wraps a Supabase write so the admin always sees saving/saved/error feedback.
+  const runSave = useCallback(
+    async (action: PromiseLike<{ error: unknown }>) => {
+      setSaveState("saving");
+      const { error } = await action;
+      if (error) {
+        setSaveState("error");
+        return false;
+      }
+      markSaved();
+      return true;
+    },
+    [markSaved]
+  );
 
   // ---------- Auth ----------
   const checkAdmin = useCallback(
@@ -216,18 +253,19 @@ export default function AdminPage() {
   }, [isAuthenticated, isAdmin, loadData]);
 
   // ---------- Site config ----------
-  const persistConfig = async (next: SiteConfig) => {
-    await supabase
-      .from("site_settings")
-      .update({
-        is_open: next.isOpen,
-        status_message: next.statusMessage,
-        prep_time: next.prepTime,
-        hero_image: next.heroImage,
-        schedule: next.schedule,
-      })
-      .eq("id", 1);
-  };
+  const persistConfig = (next: SiteConfig) =>
+    runSave(
+      supabase
+        .from("site_settings")
+        .update({
+          is_open: next.isOpen,
+          status_message: next.statusMessage,
+          prep_time: next.prepTime,
+          hero_image: next.heroImage,
+          schedule: next.schedule,
+        })
+        .eq("id", 1)
+    );
 
   const setConfigField = <K extends keyof SiteConfig>(
     field: K,
@@ -266,6 +304,7 @@ export default function AdminPage() {
     const sortOrder =
       products.reduce((max, p) => Math.max(max, p.sortOrder), 0) + 1;
 
+    setSaveState("saving");
     const { data, error } = await supabase
       .from("products")
       .insert({
@@ -280,10 +319,13 @@ export default function AdminPage() {
       )
       .single();
 
-    if (!error && data) {
-      setProducts((prev) => [...prev, mapProduct(data as ProductRow)]);
-      setNewProduct(EMPTY_PRODUCT);
+    if (error || !data) {
+      setSaveState("error");
+      return;
     }
+    setProducts((prev) => [...prev, mapProduct(data as ProductRow)]);
+    setNewProduct(EMPTY_PRODUCT);
+    markSaved();
   };
 
   const setProductField = (
@@ -296,12 +338,10 @@ export default function AdminPage() {
     );
   };
 
-  const persistProduct = async (product: Product) => {
-    await supabase
-      .from("products")
-      .update(productToRow(product))
-      .eq("id", product.id);
-  };
+  const persistProduct = (product: Product) =>
+    runSave(
+      supabase.from("products").update(productToRow(product)).eq("id", product.id)
+    );
 
   const toggleProductField = (
     product: Product,
@@ -314,8 +354,8 @@ export default function AdminPage() {
   };
 
   const deleteProduct = async (id: number) => {
-    await supabase.from("products").delete().eq("id", id);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    const ok = await runSave(supabase.from("products").delete().eq("id", id));
+    if (ok) setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
   // ---------- Promos ----------
@@ -324,6 +364,7 @@ export default function AdminPage() {
     const sortOrder =
       promos.reduce((max, p) => Math.max(max, p.sortOrder), 0) + 1;
 
+    setSaveState("saving");
     const { data, error } = await supabase
       .from("promos")
       .insert({
@@ -338,10 +379,13 @@ export default function AdminPage() {
       .select("id, enabled, title, description, badge, cta, image, sort_order")
       .single();
 
-    if (!error && data) {
-      setPromos((prev) => [...prev, mapPromo(data as PromoRow)]);
-      setNewPromo(EMPTY_PROMO);
+    if (error || !data) {
+      setSaveState("error");
+      return;
     }
+    setPromos((prev) => [...prev, mapPromo(data as PromoRow)]);
+    setNewPromo(EMPTY_PROMO);
+    markSaved();
   };
 
   const setPromoField = (
@@ -354,9 +398,10 @@ export default function AdminPage() {
     );
   };
 
-  const persistPromo = async (promo: Promo) => {
-    await supabase.from("promos").update(promoToRow(promo)).eq("id", Number(promo.id));
-  };
+  const persistPromo = (promo: Promo) =>
+    runSave(
+      supabase.from("promos").update(promoToRow(promo)).eq("id", Number(promo.id))
+    );
 
   const togglePromoEnabled = (promo: Promo, value: boolean) => {
     const next = { ...promo, enabled: value };
@@ -365,8 +410,10 @@ export default function AdminPage() {
   };
 
   const deletePromo = async (id: string) => {
-    await supabase.from("promos").delete().eq("id", Number(id));
-    setPromos((prev) => prev.filter((p) => p.id !== id));
+    const ok = await runSave(
+      supabase.from("promos").delete().eq("id", Number(id))
+    );
+    if (ok) setPromos((prev) => prev.filter((p) => p.id !== id));
   };
 
   // ---------- Render ----------
@@ -474,6 +521,37 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen bg-[#f7efe3] text-[#17130f]">
+      {saveState !== "idle" && (
+        <div
+          role="status"
+          className={`fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-black shadow-lg ${
+            saveState === "error"
+              ? "bg-red-600 text-white"
+              : saveState === "saved"
+                ? "bg-emerald-600 text-white"
+                : "bg-[#17130f] text-white"
+          }`}
+        >
+          {saveState === "saving" && (
+            <>
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+              Guardando...
+            </>
+          )}
+          {saveState === "saved" && (
+            <>
+              <Check size={16} aria-hidden="true" />
+              Guardado
+            </>
+          )}
+          {saveState === "error" && (
+            <>
+              <CircleAlert size={16} aria-hidden="true" />
+              Error al guardar
+            </>
+          )}
+        </div>
+      )}
       <header className="border-b border-black/10 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-8">
           <div>
@@ -593,6 +671,15 @@ export default function AdminPage() {
                 onBlur={() => persistConfig(config)}
                 className="w-full rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
               />
+              <div className="mt-3">
+                <ImageUpload
+                  onUploaded={(url) => {
+                    const next = { ...config, heroImage: url };
+                    setConfig(next);
+                    persistConfig(next);
+                  }}
+                />
+              </div>
             </section>
           </aside>
 
@@ -695,14 +782,21 @@ export default function AdminPage() {
                   placeholder="Descripcion"
                   className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600 md:col-span-2"
                 />
-                <input
-                  value={newPromo.image}
-                  onChange={(event) =>
-                    setNewPromo({ ...newPromo, image: event.target.value })
-                  }
-                  placeholder="Imagen"
-                  className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
-                />
+                <div className="flex flex-col gap-2">
+                  <input
+                    value={newPromo.image}
+                    onChange={(event) =>
+                      setNewPromo({ ...newPromo, image: event.target.value })
+                    }
+                    placeholder="Imagen"
+                    className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
+                  />
+                  <ImageUpload
+                    onUploaded={(url) =>
+                      setNewPromo((prev) => ({ ...prev, image: url }))
+                    }
+                  />
+                </div>
                 <button
                   onClick={addPromo}
                   className="rounded-full bg-red-600 px-5 py-3 font-black text-white transition hover:bg-red-700"
@@ -747,6 +841,19 @@ export default function AdminPage() {
                           />
                         </label>
                       ))}
+                    </div>
+
+                    <div className="mt-3">
+                      <ImageUpload
+                        label="Subir imagen de promo"
+                        onUploaded={(url) => {
+                          const updated = { ...promo, image: url };
+                          setPromos((prev) =>
+                            prev.map((p) => (p.id === promo.id ? updated : p))
+                          );
+                          persistPromo(updated);
+                        }}
+                      />
                     </div>
 
                     <button
@@ -802,14 +909,21 @@ export default function AdminPage() {
                   placeholder="Categoria"
                   className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
                 />
-                <input
-                  value={newProduct.image}
-                  onChange={(event) =>
-                    setNewProduct({ ...newProduct, image: event.target.value })
-                  }
-                  placeholder="Imagen"
-                  className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
-                />
+                <div className="flex flex-col gap-2">
+                  <input
+                    value={newProduct.image}
+                    onChange={(event) =>
+                      setNewProduct({ ...newProduct, image: event.target.value })
+                    }
+                    placeholder="Imagen"
+                    className="rounded-lg border border-black/15 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-red-600"
+                  />
+                  <ImageUpload
+                    onUploaded={(url) =>
+                      setNewProduct((prev) => ({ ...prev, image: url }))
+                    }
+                  />
+                </div>
                 <input
                   value={newProduct.description}
                   onChange={(event) =>
@@ -900,6 +1014,17 @@ export default function AdminPage() {
                       onBlur={() => persistProduct(product)}
                       className="mb-2 w-full rounded-lg border border-black/15 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-red-600"
                     />
+                    <div className="mb-2">
+                      <ImageUpload
+                        onUploaded={(url) => {
+                          const updated = { ...product, image: url };
+                          setProducts((prev) =>
+                            prev.map((p) => (p.id === product.id ? updated : p))
+                          );
+                          persistProduct(updated);
+                        }}
+                      />
+                    </div>
                     <textarea
                       value={product.description}
                       onChange={(event) =>

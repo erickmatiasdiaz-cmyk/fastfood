@@ -72,6 +72,47 @@ export default function OrdersPage() {
     };
   }, [supabase, loadOrders]);
 
+  // Live updates: new orders and status changes arrive without refreshing.
+  useEffect(() => {
+    if (!allowed) return;
+
+    const channel = supabase
+      .channel("orders-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders" },
+        (payload) => {
+          const order = payload.new as Order;
+          setOrders((prev) =>
+            prev.some((o) => o.id === order.id) ? prev : [order, ...prev]
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders" },
+        (payload) => {
+          const order = payload.new as Order;
+          setOrders((prev) =>
+            prev.map((o) => (o.id === order.id ? order : o))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "orders" },
+        (payload) => {
+          const removed = payload.old as { id: number };
+          setOrders((prev) => prev.filter((o) => o.id !== removed.id));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [allowed, supabase]);
+
   const updateStatus = async (id: number, status: string) => {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
     await supabase.from("orders").update({ status }).eq("id", id);
@@ -112,7 +153,16 @@ export default function OrdersPage() {
             <p className="text-sm font-black uppercase tracking-[0.18em] text-red-600">
               Punto Mordida
             </p>
-            <h1 className="mt-1 text-3xl font-black">Pedidos</h1>
+            <div className="mt-1 flex items-center gap-3">
+              <h1 className="text-3xl font-black">Pedidos</h1>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
+                </span>
+                En vivo
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button

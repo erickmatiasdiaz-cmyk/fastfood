@@ -6,6 +6,9 @@ import { useSiteSettings } from "@/components/SiteSettingsProvider";
 
 export default function Hero() {
   const { settings } = useSiteSettings();
+  const featuredCount = settings.products.filter(
+    (product) => product.featured
+  ).length;
 
   const handleScroll = () => {
     document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
@@ -66,7 +69,11 @@ export default function Hero() {
             {[
               { icon: Clock3, label: settings.prepTime, detail: "retiro estimado" },
               { icon: MessageCircle, label: "WhatsApp", detail: "confirmacion directa" },
-              { icon: Star, label: "4 favoritos", detail: "menu breve y claro" },
+              {
+                icon: Star,
+                label: `${featuredCount} favoritos`,
+                detail: "menu breve y claro",
+              },
             ].map(({ icon: Icon, label, detail }) => (
               <div key={label} className="rounded-lg border border-white/15 bg-white/10 p-4 backdrop-blur">
                 <Icon size={20} className="mb-3 text-yellow-300" aria-hidden="true" />
