@@ -1,18 +1,5 @@
 import type { Product } from "@/data/products";
 
-export type ProductImageMap = Record<number, string>;
-export type ProductOverrides = Record<number, Partial<Omit<Product, "id">>>;
-
-export type PromoSettings = {
-  id: string;
-  enabled: boolean;
-  title: string;
-  description: string;
-  badge: string;
-  cta: string;
-  image: string;
-};
-
 export type ScheduleDay = {
   label: string;
   open: string;
@@ -20,96 +7,114 @@ export type ScheduleDay = {
   closed: boolean;
 };
 
-export type SiteSettings = {
+export type Promo = {
+  id: string;
+  enabled: boolean;
+  title: string;
+  description: string;
+  badge: string;
+  cta: string;
+  image: string;
+  sortOrder: number;
+};
+
+export type SiteConfig = {
   isOpen: boolean;
   statusMessage: string;
   prepTime: string;
   heroImage: string;
-  productImages: ProductImageMap;
-  productOverrides: ProductOverrides;
-  customProducts: Product[];
-  hiddenProductIds: number[];
-  promo: PromoSettings;
-  promos: PromoSettings[];
   schedule: ScheduleDay[];
 };
 
-export const SITE_SETTINGS_STORAGE_KEY = "punto-mordida-site-settings";
+/** Everything the storefront needs to render, fetched from Supabase. */
+export type SiteData = SiteConfig & {
+  products: Product[];
+  promos: Promo[];
+};
 
-export const defaultSiteSettings: SiteSettings = {
+// ---------- Database row shapes (snake_case) ----------
+
+export type ProductRow = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  featured: boolean;
+  badge: string;
+  prep_time: string;
+  is_hidden: boolean;
+  sort_order: number;
+};
+
+export type PromoRow = {
+  id: number;
+  enabled: boolean;
+  title: string;
+  description: string;
+  badge: string;
+  cta: string;
+  image: string;
+  sort_order: number;
+};
+
+export type SiteSettingsRow = {
+  is_open: boolean;
+  status_message: string;
+  prep_time: string;
+  hero_image: string;
+  schedule: ScheduleDay[];
+};
+
+// ---------- Row -> app mappers ----------
+
+export function mapProduct(row: ProductRow): Product {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    price: row.price,
+    category: row.category,
+    image: row.image,
+    featured: row.featured,
+    badge: row.badge,
+    prepTime: row.prep_time,
+    isHidden: row.is_hidden,
+    sortOrder: row.sort_order,
+  };
+}
+
+export function mapPromo(row: PromoRow): Promo {
+  return {
+    id: String(row.id),
+    enabled: row.enabled,
+    title: row.title,
+    description: row.description,
+    badge: row.badge,
+    cta: row.cta,
+    image: row.image,
+    sortOrder: row.sort_order,
+  };
+}
+
+export function mapSiteConfig(row: SiteSettingsRow): SiteConfig {
+  return {
+    isOpen: row.is_open,
+    statusMessage: row.status_message,
+    prepTime: row.prep_time,
+    heroImage: row.hero_image,
+    schedule: row.schedule ?? [],
+  };
+}
+
+/** Safe fallback used if Supabase is unreachable during SSR. */
+export const fallbackSiteData: SiteData = {
   isOpen: true,
   statusMessage: "Abierto ahora",
   prepTime: "15-20 min",
   heroImage: "/hero.png",
-  productImages: {},
-  productOverrides: {},
-  customProducts: [],
-  hiddenProductIds: [],
-  promo: {
-    id: "promo-combo-clasico",
-    enabled: true,
-    title: "Combo Clasico para retirar",
-    description:
-      "Completo italiano, papas crujientes y bebida helada con precio redondo para la hora punta.",
-    badge: "Promo activa",
-    cta: "Agregar promo",
-    image: "/products/combo_clasico.png",
-  },
-  promos: [
-    {
-      id: "promo-combo-clasico",
-      enabled: true,
-      title: "Combo Clasico para retirar",
-      description:
-        "Completo italiano, papas crujientes y bebida helada con precio redondo para la hora punta.",
-      badge: "Promo activa",
-      cta: "Agregar promo",
-      image: "/products/combo_clasico.png",
-    },
-  ],
-  schedule: [
-    { label: "Lunes", open: "12:00", close: "22:00", closed: false },
-    { label: "Martes", open: "12:00", close: "22:00", closed: false },
-    { label: "Miercoles", open: "12:00", close: "22:00", closed: false },
-    { label: "Jueves", open: "12:00", close: "22:00", closed: false },
-    { label: "Viernes", open: "12:00", close: "23:30", closed: false },
-    { label: "Sabado", open: "12:00", close: "23:30", closed: false },
-    { label: "Domingo", open: "13:00", close: "21:00", closed: false },
-  ],
+  schedule: [],
+  products: [],
+  promos: [],
 };
-
-export function mergeSiteSettings(settings: Partial<SiteSettings>): SiteSettings {
-  return {
-    ...defaultSiteSettings,
-    ...settings,
-    promo: {
-      ...defaultSiteSettings.promo,
-      ...settings.promo,
-    },
-    productImages: {
-      ...defaultSiteSettings.productImages,
-      ...settings.productImages,
-    },
-    productOverrides: {
-      ...defaultSiteSettings.productOverrides,
-      ...settings.productOverrides,
-    },
-    customProducts: settings.customProducts ?? defaultSiteSettings.customProducts,
-    hiddenProductIds:
-      settings.hiddenProductIds ?? defaultSiteSettings.hiddenProductIds,
-    schedule: settings.schedule?.length
-      ? settings.schedule
-      : defaultSiteSettings.schedule,
-    promos: settings.promos?.length
-      ? settings.promos
-      : settings.promo
-        ? [
-            {
-              ...defaultSiteSettings.promo,
-              ...settings.promo,
-              id: settings.promo.id ?? defaultSiteSettings.promo.id,
-            },
-          ]
-        : defaultSiteSettings.promos,
-  };
-}

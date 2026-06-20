@@ -1,23 +1,9 @@
-import { products, type Product } from "@/data/products";
-import type { SiteSettings } from "@/lib/siteSettings";
+import type { Product } from "@/data/products";
+import type { SiteData } from "@/lib/siteSettings";
 
-export function getManagedProducts(settings: SiteSettings): Product[] {
-  const baseProducts = products
-    .filter((product) => !settings.hiddenProductIds.includes(product.id))
-    .map((product) => {
-      const override = settings.productOverrides[product.id] ?? {};
-
-      return {
-        ...product,
-        ...override,
-        image:
-          settings.productImages[product.id] ??
-          override.image ??
-          product.image,
-      };
-    });
-
-  return [...baseProducts, ...settings.customProducts];
+/** Products to show in the storefront (already filtered/ordered by Supabase). */
+export function getManagedProducts(data: SiteData): Product[] {
+  return data.products;
 }
 
 export function getCategories(catalog: Product[]) {

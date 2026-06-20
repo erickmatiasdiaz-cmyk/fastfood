@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
+import { createClient } from "@/lib/supabase/client";
 import { useCart } from "./CartProvider";
 
 interface CheckoutModalProps {
@@ -43,7 +44,7 @@ export default function CheckoutModal({
 
   if (!isOpen) return null;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const customerName = name.trim();
     const customerComment = comment.trim();
 
@@ -63,6 +64,25 @@ export default function CheckoutModal({
       pickupTime,
       comment: customerComment,
     });
+
+    // Persist the order in Supabase. Never block the customer if it fails.
+    try {
+      const supabase = createClient();
+      await supabase.from("orders").insert({
+        customer_name: customerName,
+        pickup_time: pickupTime,
+        comment: customerComment,
+        items: cart.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        total,
+      });
+    } catch {
+      // Order still goes through via WhatsApp even if persistence fails.
+    }
 
     window.open(url, "_blank", "noopener,noreferrer");
 
