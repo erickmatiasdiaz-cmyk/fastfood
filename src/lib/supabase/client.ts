@@ -1,12 +1,10 @@
 import { createBrowserClient } from "@supabase/ssr";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 
 /**
  * Browser Supabase client. Persists the auth session in cookies so the admin
  * stays logged in and the storefront can read public data with the anon key.
  */
 export function createClient() {
-  return createBrowserClient(supabaseUrl, supabaseKey);
+  return createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
