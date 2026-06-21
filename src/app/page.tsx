@@ -12,8 +12,10 @@ import { CartProvider } from "@/components/CartProvider";
 import { SiteSettingsProvider } from "@/components/SiteSettingsProvider";
 import { getStorefrontData } from "@/lib/data";
 
-// Always render with fresh data so admin changes appear immediately.
-export const dynamic = "force-dynamic";
+// Incremental Static Regeneration: the storefront HTML is cached at the edge and
+// regenerated at most every 30s, so under load Supabase is queried ~once per
+// window instead of once per visitor. Admin changes appear within ~30s.
+export const revalidate = 30;
 
 export default async function Home() {
   const data = await getStorefrontData();

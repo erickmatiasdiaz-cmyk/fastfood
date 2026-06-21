@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
-import { createClient } from "@/lib/supabase/client";
 import { useCart } from "./CartProvider";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -18,6 +18,7 @@ export default function CheckoutModal({
   total,
 }: CheckoutModalProps) {
   const { cart, clearCart, closeCart } = useCart();
+  const { settings } = useSiteSettings();
   const [name, setName] = useState("");
   const [pickupTime, setPickupTime] = useState("Ahora");
   const [comment, setComment] = useState("");
@@ -54,6 +55,11 @@ export default function CheckoutModal({
       return;
     }
 
+    if (!settings.isOpen) {
+      setError("El local está cerrado por ahora. Vuelve cuando esté abierto.");
+      return;
+    }
+
     setError("");
     setIsSending(true);
 
@@ -69,23 +75,30 @@ export default function CheckoutModal({
     // window.open consumes the user activation and pop-up blockers may cancel it.
     window.open(url, "_blank", "noopener,noreferrer");
 
-    // Persist the order in Supabase. Never block the customer if it fails.
+    // Persist the order via our server route (validated + rate-limited). Never
+    // block the customer if it fails — the order still reaches the local through
+    // the WhatsApp message — but surface failures so they aren't silent.
     try {
-      const supabase = createClient();
-      await supabase.from("orders").insert({
-        customer_name: customerName,
-        pickup_time: pickupTime,
-        comment: customerComment,
-        items: cart.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-        })),
-        total,
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName,
+          pickupTime,
+          comment: customerComment,
+          items: cart.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        }),
       });
-    } catch {
-      // Order still goes through via WhatsApp even if persistence fails.
+      if (!res.ok) {
+        console.error("No se pudo guardar el pedido. Estado:", res.status);
+      }
+    } catch (err) {
+      console.error("Error de red al guardar el pedido:", err);
     }
 
     setTimeout(() => {
@@ -149,6 +162,7 @@ export default function CheckoutModal({
                 ref={nameInputRef}
                 id="customer-name"
                 type="text"
+                maxLength={120}
                 placeholder="Ej: Juan Perez"
                 className="w-full rounded-lg border border-black/15 px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-red-500"
                 value={name}
@@ -194,6 +208,7 @@ export default function CheckoutModal({
               <textarea
                 id="customer-comment"
                 rows={3}
+                maxLength={500}
                 placeholder="Sin cebolla, bien cocido, etc."
                 className="w-full rounded-lg border border-black/15 px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-red-500"
                 value={comment}
