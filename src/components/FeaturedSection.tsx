@@ -22,13 +22,13 @@ export default function FeaturedSection() {
               Los que mas salen
             </p>
             <h2 className="mt-3 max-w-2xl text-4xl font-black tracking-normal text-[#17130f] md:text-5xl">
-              Favoritos listos para convertir una visita en pedido.
+              Los favoritos de la casa, siempre listos para retirar.
             </h2>
           </div>
 
           <p className="max-w-md text-base font-medium leading-7 text-black/60">
-            Cards con foto grande, precio inmediato y tiempo estimado: justo lo
-            que el cliente necesita para decidir rapido.
+            Los que se piden una y otra vez: bien servidos, calientes y listos en
+            minutos. Agregalos y pasa a buscarlos.
           </p>
         </div>
 

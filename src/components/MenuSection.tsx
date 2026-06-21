@@ -36,8 +36,8 @@ export default function MenuSection() {
           </div>
 
           <div className="rounded-lg bg-[#17130f] px-5 py-4 text-white shadow-xl shadow-black/10">
-            <p className="text-sm font-bold text-white/65">Pedido promedio</p>
-            <p className="text-2xl font-black">{settings.prepTime} retiro</p>
+            <p className="text-sm font-bold text-white/65">Tiempo de retiro</p>
+            <p className="text-2xl font-black">{settings.prepTime}</p>
           </div>
         </div>
 
