@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
-import { createClient } from "@/lib/supabase/client";
 import { useCart } from "./CartProvider";
 import { useSiteSettings } from "./SiteSettingsProvider";
 
@@ -76,26 +75,27 @@ export default function CheckoutModal({
     // window.open consumes the user activation and pop-up blockers may cancel it.
     window.open(url, "_blank", "noopener,noreferrer");
 
-    // Persist the order in Supabase. Never block the customer if it fails, but
-    // do surface the failure: an RLS rejection returns an { error } object
-    // instead of throwing, so it would otherwise be invisible (the order would
-    // reach WhatsApp but never appear in /admin/pedidos).
+    // Persist the order via our server route (validated + rate-limited). Never
+    // block the customer if it fails — the order still reaches the local through
+    // the WhatsApp message — but surface failures so they aren't silent.
     try {
-      const supabase = createClient();
-      const { error: insertError } = await supabase.from("orders").insert({
-        customer_name: customerName,
-        pickup_time: pickupTime,
-        comment: customerComment,
-        items: cart.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-        })),
-        total,
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName,
+          pickupTime,
+          comment: customerComment,
+          items: cart.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        }),
       });
-      if (insertError) {
-        console.error("No se pudo guardar el pedido en Supabase:", insertError);
+      if (!res.ok) {
+        console.error("No se pudo guardar el pedido. Estado:", res.status);
       }
     } catch (err) {
       console.error("Error de red al guardar el pedido:", err);
