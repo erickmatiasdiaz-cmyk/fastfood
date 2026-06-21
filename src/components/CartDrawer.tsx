@@ -213,12 +213,27 @@ export default function CartDrawer() {
                   </motion.span>
                 </motion.div>
 
-                <button
-                  onClick={() => setIsCheckoutOpen(true)}
-                  className="w-full py-4 rounded-full font-black text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
-                >
-                  Continuar por WhatsApp
-                </button>
+                {settings.isOpen ? (
+                  <button
+                    onClick={() => setIsCheckoutOpen(true)}
+                    className="w-full py-4 rounded-full font-black text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+                  >
+                    Continuar por WhatsApp
+                  </button>
+                ) : (
+                  <div>
+                    <button
+                      disabled
+                      aria-disabled="true"
+                      className="w-full py-4 rounded-full font-black text-white bg-black/30 cursor-not-allowed"
+                    >
+                      Local cerrado
+                    </button>
+                    <p className="mt-2 text-center text-xs font-bold text-black/55">
+                      {settings.statusMessage}. Podrás pedir cuando reabramos.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </motion.aside>
